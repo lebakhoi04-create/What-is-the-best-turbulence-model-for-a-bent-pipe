@@ -1,0 +1,36 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM                                        |
+|  \\    /   O peration     |                                                 |
+|   \\  /    A nd           |                                                 |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      turbulenceProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+simulationType  LES;
+
+LES
+{
+    LESModel        dynamicKEqn;
+    turbulence      on;
+    printCoeffs     on;
+
+    delta           cubeRootVol;
+
+    cubeRootVolCoeffs
+    {
+        deltaCoeff  1;
+    }
+
+    dynamicKEqnCoeffs
+    {
+        filter      simple;
+    }
+}
