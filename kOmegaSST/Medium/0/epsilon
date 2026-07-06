@@ -1,0 +1,79 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2512                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      epsilon;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -3 0 0 0 0];
+
+internalField   uniform 9.3;
+
+boundaryField
+{
+inlet
+  {
+      type            codedFixedValue;
+      value           uniform  9.3; 
+      name            dissipationRateInlet;
+
+      code
+      #{
+          const fvPatch& boundaryPatch = patch();
+          const vectorField& Cf = boundaryPatch.Cf();
+          scalarField& field = *this;
+
+          // Constants (Synced with your k-profile)
+          const scalar U_bar = 30.0;
+          const scalar D = 0.104;
+          const scalar R = D / 2.0;
+          const scalar lambda = 0.0176;
+          const scalar u_tau = U_bar * Foam::sqrt(lambda / 8.0);
+          const scalar kappa = 0.424; // Von Karman constant
+
+          forAll(Cf, faceI)
+          {
+              // 1. Calculate distances
+              scalar r = Foam::mag(Cf[faceI] - vector(0,0,Cf[faceI].z()));
+              scalar y = R - r; // Distance from the wall
+              
+              // 2. Near-wall epsilon (Standard equilibrium profile)
+              // We add a tiny offset (1e-6) to y to prevent division by zero at the wall
+              scalar epsilon_wall = Foam::pow(u_tau, 3.0) / (kappa * (y + 1e-6));
+
+              // 3. Core epsilon (Prevents epsilon from dropping too low in the center)
+              // Using the 7% mixing length rule as a "floor" for the centerline
+              scalar L_core = 0.07 * D;
+              const scalar Cmu = 0.09;
+              scalar k_core = 0.01 * Foam::sqr(u_tau); // Matches your k-floor logic
+              scalar epsilon_core = (Foam::pow(Cmu, 0.75) * Foam::pow(k_core, 1.5)) / L_core;
+
+              // 4. Combine: Use the wall formula, but cap it with the core value
+              field[faceI] = Foam::max(epsilon_wall, epsilon_core);
+          }
+      #};
+  }
+
+    outlet
+    {
+        type            zeroGradient;
+    }
+
+    wall
+    {
+        type            epsilonWallFunction;
+        value           uniform 9.3;
+    }
+}
+
+
+// ************************************************************************* //

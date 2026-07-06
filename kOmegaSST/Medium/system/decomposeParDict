@@ -1,0 +1,15 @@
+/*--------------------------------*- C++ -*----------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Set this to the number returned by 'nproc' (e.g., 8 or 16)
+numberOfSubdomains 6; 
+
+// 'scotch' is the best for O-grids as it minimizes the communication between cores
+method          scotch;
