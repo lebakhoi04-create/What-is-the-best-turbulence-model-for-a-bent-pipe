@@ -1,0 +1,106 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2512                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pisoFoam;
+startFrom       startTime;
+startTime       0.9924;
+stopAt          endTime;
+endTime         8; 
+deltaT          1.2e-4;      
+writeControl    timeStep;
+writeInterval   10; 
+purgeWrite      50;
+writeFormat     binary;  
+writePrecision  8;
+writeCompression off;
+timeFormat      general;
+timePrecision   8;
+runTimeModifiable true;
+
+functions
+{
+    fieldAverage1
+    {
+        type            fieldAverage;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+        cleanRestart    true;
+
+        fields
+        (
+            U
+            {
+                mean        on;
+                prime2Mean  on;
+                base        time;
+            }
+            nut
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+            p
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+        );
+    }
+
+
+
+    outletPlane
+    {
+        type                surfaces;
+        libs                (sampling);
+        writeControl        timeStep;
+        writeInterval       1;
+        timeStart           0.3; 
+        surfaceFormat       boundaryData;
+        fields              (U p nut k);
+        surfaces
+        {
+            outlet
+            {
+                type        patch;
+                patches     (outlet);
+            }
+        }
+    }
+    
+    yPlus
+    {
+        type            yPlus;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   1;
+        purgeWrite      10;
+    }
+
+    CourantNo
+    {
+        type            CourantNo;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   1;
+        purgeWrite      10;
+    }
+    
+}
+
+// ************************************************************************* //
